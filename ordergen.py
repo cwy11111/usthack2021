@@ -21,4 +21,3 @@ def online_order():
     driver_distance = random.uniform(0, 2)
     l1 = {"online_id" : online_id, "online_order_time" :  online_order_time, "driver_distance" : driver_distance}
     print(l1)
-
