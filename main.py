@@ -1,7 +1,7 @@
 import csv
 
 def readdata():         # this function tidy up the list read from csv and return the whole list
-  with open("usthackcsv.csv", newline='', encoding="utf-8") as csvfile:
+  with open(r"data\usthackcsv.csv", newline='', encoding="utf-8") as csvfile:
     rows = csv.reader(csvfile)                  # read the csvfile as a 2D list
     #rowsDict = csv.DictReader(csvfile)          # read the csvfile as a Dictionary (on9)
     l0 = list(rows)       # make it a list first
