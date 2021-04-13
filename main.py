@@ -1,9 +1,12 @@
 import csv
 import time
+#import datetime
 
-def print2Dlist(thislist):        # print out the 2D line by line
+def print2Dlist(thislist, spacing):        # print out the 2D line by line
+    s = spacing * ' '
     for row in thislist:
-        print(row)
+        print(*row, sep=s)
+            #print('{:<{length}}'.format(item, length= len(str(item))*2+1) , end='')               
 
 def readdata():         # this function tidy up the list read from csv and return the whole list
   with open(r"data\usthackcsv.csv", newline='', encoding="utf-8") as csvfile:
@@ -24,10 +27,29 @@ def readdata():         # this function tidy up the list read from csv and retur
     del l2      # release the temp list
 
     # print the whole Menu out once
-    print2Dlist(Menu)
+    print2Dlist(Menu,2)
 
     return Menu         
     #print(set(l1) & set(l2))
+
+# customize setting
+def customize():        
+    global Max_WaitTime_EachDish    
+    global Number_of_chef
+    # ask about maximum waiting time of each dish
+    answer = input("Enter the maximum waiting time of each unserved dish (in minutes): ")
+    while not(answer.isdigit()) or int(answer) <0:           # validate the user input 
+        answer = input("Please enter a valid number (in minutes): ")
+    answer = int(answer)
+    Max_WaitTime_EachDish = answer * 60         # change the unit of the value into seconds
+
+    # ask about number of dish being prepared at the same time aka number of chef
+    answer = input("Enter the number of dish(es) can be prepared at the same time: ")
+    while not(answer.isdigit()) or int(answer) <1:           # validate the user input 
+        answer = input("Please enter a valid number: ")
+    answer = int(answer)
+    Number_of_chef = answer
+    print()
 
 # this function define the dictionary that can access name of dishes by dish ID 
 def defineDict(TodayMenu):
@@ -38,11 +60,11 @@ def defineDict(TodayMenu):
 
 # print the system selection menu and read the user input
 def mainmenu():         
-    print("***Main meun***\n1. Ordering\n2. Food availible today\n3. Queue\n4. Ordering history\n5. Quit")      # print mainmenu
-    answer = input("What do you want to do ? (Enter 1 to 5)")               # seek user input
+    print("***Main meun***\n1. Make order\n2. Food availible today\n3. Queue\n4. Show unserved dish\n5. Update unserved dish\n6. Order history\n7. Quit")      # print mainmenu
+    answer = input("What do you want to do ? (Enter 1 to 7) ")               # seek user input
     
-    while not(answer.isdigit()) or int(answer) < 1 or int(answer) > 5:       # validate the user input is a integer and check range
-        answer = input("Invalid input.\nWhat do you want to do ? (Enter 1 to 5)")
+    while not(answer.isdigit()) or int(answer) < 1 or int(answer) > 7:       # validate the user input is a integer and check range
+        answer = input("Invalid input.\nWhat do you want to do ? (Enter 1 to 7) ")
     return answer
 
 # print Food availible today
@@ -59,58 +81,110 @@ def dishExists(targetID, TodayMenu):
     return False
 
 # temp ordering function for queue
-def order(orderedlist, TodayMenu):              # orderedlist is passed by reference
+def order(orderedlist, OrderedHistory, TodayMenu, orderID):              # orderedlist and orderedHistory is passed by reference
     global System_start_time                    # use the global variables
     global ID_to_name
-    templist = ["orderID", "orderDishName" ,"orderTime" ]        # "initialize" the temp list
+    templist = ["orderID", "dishID", "orderDishName" ,"orderTime", "remainTime"]     # "initialize" the temp list; structure of the ordered_list
     order_food_ID = input("Enter the dish ID you want to order: ")
     order_time = time.time()                    # record the ordering time
     while not(dishExists(order_food_ID, TodayMenu)):         # validate the input, i.e. check if the input ID exists in the Menu
         print("Wrong input, please check food available today one more time before ordering. ")
-        printFood_available(ID_to_name)              # print the Today Menu one more time for the user to check
+        printFood_available(ID_to_name)         # print the Today Menu one more time for the user to check
         order_food_ID = input("Enter the dish ID you want to order: ")
         order_time = time.time()
-        
-    templist[0] = order_food_ID
-    templist[1] = ID_to_name[order_food_ID]
-    templist[2] = round(order_time - System_start_time, 2)
-    orderedlist.append(templist)
+    
+    templist[0] = orderID    
+    templist[1] = order_food_ID
+    templist[2] = ID_to_name[order_food_ID]
+    templist[3] = datetime.timedelta(seconds = int(order_time - System_start_time))            # Trans to date time format, i.e. hour: minute: second
+    #templist[3] = round((order_time - System_start_time) / 60, 2)              
+    # search the required expected time as initial value of remainTime
+    for dish in TodayMenu:
+        if dish[0] == order_food_ID:
+            templist[4] = int(dish[3]) * 60
+
+    orderedlist.append(templist)                 
+    OrderedHistory.append(templist[:4])                 # the orderedHistory does not need the field "remainTime"
 
     del templist        # release templist
 
-# TODO
+def showOrderedList(orderedlist):          # print out all the dishes that are unserved
+    if not orderedlist:                     # check if the unservedlist is empty
+        print("There is currently no unserved dish. ")
+    else:
+        print("\nID " , "Dish-ID " ,"Dish-Name " , " Order-At " , "Pre-Time(second) ")
+        print2Dlist(orderedlist,6)
+
+def showOrderedHistory(orderedlist):          # print out all the dishes history
+    if not orderedlist:                     # check if the list is empty
+        print("There is currently no order history. ")
+    else:
+        print("\nID " , "Dish-ID " ,"Dish-Name " , " Order-At " )
+        print2Dlist(orderedlist,6) 
+
+def updateUnservedList_Manual(orderedlist):    # update the list manually
+    if not orderedlist:
+        print("There is currently no unserved dish. ")
+        return          # return the function if the orderedlist is empty
+
+    print2Dlist(orderedlist,5)
+    target_ID = input("Which order do you want to remove? (Enter the order ID from 1 to {boundary}) ".format(boundary=len(orderedlist)) ) 
+    while not(target_ID.isdigit()) or int(target_ID) < 1 or int(target_ID) > len(orderedlist):              # validate the user input
+        target_ID = input(("Invalid input. Please input again with range 1 to {boundary} : ".format(boundary=len(orderedlist))))
+        
+    target_ID = int(target_ID)
+    for order in orderedlist:
+        if order[0] == target_ID:
+            orderedlist.remove(order)
+            print("Order" , target_ID ,"is successfully removed from the unserved order list. The list becomes: ")
+            if not orderedlist:                         # if the list become empty after removal
+                print("The list is currently empty. ")
+            else:
+                print2Dlist(orderedlist,5)
+
+# TODO queue the unserved list with rules
 def queue(orderedlist):       # orderedlist is passed by reference
     return
 
 # declare variable
 TodayMenu = []             # a 2D list storing the menu
 System_start_time = time.time()     # storing the time the system open
-ordered_list = []           # a 2D list storing the order record
-ID_to_name = {}             # a dictionary storing the name of dishes corresponding to each dish ID
+ordered_list = []             # a 2D list storing the unserved dishes
+ordered_history = []          # a 2D list storing the order record
+ID_to_name = {}               # a dictionary storing the name of dishes corresponding to each dish ID
+Max_WaitTime_EachDish = 900   # initialize the maximum waiting time of each dish as 15 mins (900s), ignore it if the preparation time is longer
+Number_of_chef = 1            # initialize the number of dish being prepared at the same time  
+orderNumber = 0                  # The number N : N-th order
 
 # main program start
 
 TodayMenu = readdata()                  # TodayMenu is the 2D list storing all dishes
 ID_to_name = defineDict(TodayMenu)      # define the dish ID to name dictionary
+customize()                             # ask the user about some values of pre-load variables
 response = mainmenu()                   # get the user response
-while (response != '5'):
+while (response != '7'):
 
     if (response == '1'):       # TODO ordering section
-        order(ordered_list, TodayMenu)
-        print()
+        orderNumber +=1
+        order(ordered_list, ordered_history, TodayMenu, orderNumber)
 
     elif (response == '2'):
         printFood_available(ID_to_name)
-        print()
 
-    elif (response == '4'):     # TODO ordering history
-        if not ordered_list:    # if the list is empty
-            print("There is currently no ordered history. ")
-            print()
-        else:
-            print2Dlist(ordered_list)
-            print()
+    elif (response == '3'):      # TODO queue
+        queue(ordered_list)
 
+    elif (response == '4'):     # TODO show unserved order-list
+        showOrderedList(ordered_list)
+
+    elif (response == '5'):     # TODO  update the unserved order-list manually
+        updateUnservedList_Manual(ordered_list)
+
+    elif (response == '6'):     # TODO ordering history
+       showOrderedHistory(ordered_history)
+    
+    
+
+    print()
     response = mainmenu()       # get the user response again
-   
     
