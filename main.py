@@ -1,6 +1,6 @@
 import csv
 import time
-#import datetime
+from datetime import timedelta
 
 def print2Dlist(thislist, spacing):        # print out the 2D line by line
     s = spacing * ' '
@@ -96,7 +96,7 @@ def order(orderedlist, OrderedHistory, TodayMenu, orderID):              # order
     templist[0] = orderID    
     templist[1] = order_food_ID
     templist[2] = ID_to_name[order_food_ID]
-    templist[3] = datetime.timedelta(seconds = int(order_time - System_start_time))            # Trans to date time format, i.e. hour: minute: second
+    templist[3] = timedelta(seconds = int(order_time - System_start_time))            # Trans to date time format, i.e. hour: minute: second
     #templist[3] = round((order_time - System_start_time) / 60, 2)              
     # search the required expected time as initial value of remainTime
     for dish in TodayMenu:
@@ -142,12 +142,39 @@ def updateUnservedList_Manual(orderedlist):    # update the list manually
             else:
                 print2Dlist(orderedlist,5)
 
-# TODO queue the unserved list with rules
-def queue(orderedlist):       # orderedlist is passed by reference
-    return
+def findIndex(dish_name, TodayMenu):            # find the index of the dish in the TodayMenu list
+    for i in range(len(TodayMenu)):
+        if TodayMenu[i][1] == dish_name:
+            return i
+
+# queue the unserved list 
+# Objective: Group the similar dish together in the unserved order list 
+def queue(orderedlist,TodayMenu):       
+
+    # add a new field to all order for the "similarity" scores counting
+    for order in orderedlist:           
+        order.append(0)             
+    
+    # calculate the similarity
+    for orderToCal in orderedlist:               
+        for eachOrder in orderedlist:
+            if orderToCal != eachOrder:
+                index_of_ToCal = findIndex(orderToCal[2], TodayMenu)
+                index_of_Each = findIndex(eachOrder[2], TodayMenu)
+                if TodayMenu[index_of_ToCal][2] == TodayMenu[index_of_Each][2]:             # increase the similarity by 3 if they have same cooking method
+                    orderToCal[5] +=3
+                # increase the similarity by 1 for each similar cooking ingredient
+                orderToCal[5] += len(set(TodayMenu[index_of_ToCal][4:] ) & set(TodayMenu[index_of_Each][4:] ))
+                
+    orderedlist.sort( key = lambda l:l[5], reverse=True)            # sort the 2D order list by the similarity by descending order
+    for order in orderedlist:           
+        del order[5]    
+    
+    print("\nThe list is re-ordered as following: ")
+    showOrderedList(orderedlist)
 
 # declare variable
-TodayMenu = []             # a 2D list storing the menu
+TodayMenu = []             # a 2D list storing the whole menu (with all informations)
 System_start_time = time.time()     # storing the time the system open
 ordered_list = []             # a 2D list storing the unserved dishes
 ordered_history = []          # a 2D list storing the order record
@@ -160,27 +187,27 @@ orderNumber = 0                  # The number N : N-th order
 
 TodayMenu = readdata()                  # TodayMenu is the 2D list storing all dishes
 ID_to_name = defineDict(TodayMenu)      # define the dish ID to name dictionary
-customize()                             # ask the user about some values of pre-load variables
+#customize()                             # ask the user about some values of pre-load variables
 response = mainmenu()                   # get the user response
 while (response != '7'):
 
-    if (response == '1'):       # TODO ordering section
+    if (response == '1'):       # ordering section
         orderNumber +=1
         order(ordered_list, ordered_history, TodayMenu, orderNumber)
 
-    elif (response == '2'):
+    elif (response == '2'):     # show the food and ID 
         printFood_available(ID_to_name)
 
-    elif (response == '3'):      # TODO queue
-        queue(ordered_list)
+    elif (response == '3'):      # queue
+        queue(ordered_list,TodayMenu)
 
-    elif (response == '4'):     # TODO show unserved order-list
+    elif (response == '4'):     # show unserved order-list
         showOrderedList(ordered_list)
 
-    elif (response == '5'):     # TODO  update the unserved order-list manually
+    elif (response == '5'):     # update the unserved order-list manually
         updateUnservedList_Manual(ordered_list)
 
-    elif (response == '6'):     # TODO ordering history
+    elif (response == '6'):     # ordering history
        showOrderedHistory(ordered_history)
     
     
