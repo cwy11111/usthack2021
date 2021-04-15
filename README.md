@@ -1,2 +1,3 @@
 # usthack2021
-whyou888
+## Team: whyou888
+## Project : Food Ordering Helper 

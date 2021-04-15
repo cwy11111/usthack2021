@@ -14,7 +14,6 @@ def readdata():         # this function tidy up the list read from csv and retur
     #rowsDict = csv.DictReader(csvfile)          # read the csvfile as a Dictionary (on9)
     l0 = list(rows)       # make it a list first
     Menu = []             # 2D list storing all data without empty reduntant cell
-    
 
     # strip off the empty cell and the first row (column title)
     for i in range(1, len(l0)):
@@ -30,7 +29,6 @@ def readdata():         # this function tidy up the list read from csv and retur
     print2Dlist(Menu,2)
 
     return Menu         
-    #print(set(l1) & set(l2))
 
 # customize setting
 def customize():        
@@ -69,6 +67,7 @@ def mainmenu():
 
 # print Food availible today
 def printFood_available(dish_dict):
+    print("The food provided are following: ")
     for item in dish_dict.keys():
         print(item , ':', dish_dict[item] , end=' ', sep='' )
     print()
