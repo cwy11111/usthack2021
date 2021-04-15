@@ -20,4 +20,5 @@
 - **Queue**: `Rearrange` the order of all dishes stored in the **`unserved list`** to enhance the efficiency of serving. It works by grouping the similar unserved dishes together with criteria, including **cooking method** and **ingredients**.<br>
 - **Show unserved dish**: Show all the dish(es) on the **`unserved list`** with their `ordering time`.<br>
 - **Update unserved dish**: Manually `delete` those served dish(es).<br>
-- **Order history**: Show the record of all the ordered dish(es) since the program started. <br>
+- **Order history**: Show the record of all the ordered dish(es) since the program started. <br
+- **Quit**: `Exit` the application.
