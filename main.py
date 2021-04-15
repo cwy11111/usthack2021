@@ -1,15 +1,15 @@
 import csv
 import time
-from datetime import timedelta
+from pathlib import Path
+
 
 def print2Dlist(thislist, spacing):        # print out the 2D line by line
     s = spacing * ' '
     for row in thislist:
-        print(*row, sep=s)
-            #print('{:<{length}}'.format(item, length= len(str(item))*2+1) , end='')               
+        print(*row, sep=s)            
 
-def readdata():         # this function tidy up the list read from csv and return the whole list
-  with open(r"data\usthackcsv.csv", newline='', encoding="utf-8") as csvfile:
+def readdata(filename):         # this function tidy up the list read from csv and return the whole list
+  with open(filename, newline='', encoding="utf-8") as csvfile:
     rows = csv.reader(csvfile)                  # read the csvfile as a 2D list
     #rowsDict = csv.DictReader(csvfile)          # read the csvfile as a Dictionary (on9)
     l0 = list(rows)       # make it a list first
@@ -32,22 +32,16 @@ def readdata():         # this function tidy up the list read from csv and retur
 
 # customize setting
 def customize():        
-    global Max_WaitTime_EachDish    
-    global Number_of_chef
     # ask about maximum waiting time of each dish
-    answer = input("Enter the maximum waiting time of each unserved dish (in minutes): ")
-    while not(answer.isdigit()) or int(answer) <0:           # validate the user input 
-        answer = input("Please enter a valid number (in minutes): ")
-    answer = int(answer)
-    Max_WaitTime_EachDish = answer * 60         # change the unit of the value into seconds
-
-    # ask about number of dish being prepared at the same time aka number of chef
-    answer = input("Enter the number of dish(es) can be prepared at the same time: ")
-    while not(answer.isdigit()) or int(answer) <1:           # validate the user input 
-        answer = input("Please enter a valid number: ")
-    answer = int(answer)
-    Number_of_chef = answer
+    answer = "data\\"+ input("Enter the filename of the food data (csvfile): ")
+    csvfile = Path(answer)
+    while not(csvfile.is_file()) :           # validate the user input 
+        answer = "data\\" +  input("File not found.\nPlease enter a valid filename: ")
+        csvfile = Path(answer)
+        print(answer)
+    
     print()
+    return answer
 
 # this function define the dictionary that can access name of dishes by dish ID 
 def defineDict(TodayMenu):
@@ -85,17 +79,18 @@ def order(orderedlist, OrderedHistory, TodayMenu, orderID):              # order
     global ID_to_name
     templist = ["orderID", "dishID", "orderDishName" ,"orderTime", "remainTime"]     # "initialize" the temp list; structure of the ordered_list
     order_food_ID = input("Enter the dish ID you want to order: ")
-    order_time = time.time()                    # record the ordering time
+    order_time = time.localtime()                    # record the ordering time
     while not(dishExists(order_food_ID, TodayMenu)):         # validate the input, i.e. check if the input ID exists in the Menu
         print("Wrong input, please check food available today one more time before ordering. ")
         printFood_available(ID_to_name)         # print the Today Menu one more time for the user to check
         order_food_ID = input("Enter the dish ID you want to order: ")
-        order_time = time.time()
+        order_time = time.localtime()
     
     templist[0] = orderID    
     templist[1] = order_food_ID
     templist[2] = ID_to_name[order_food_ID]
-    templist[3] = timedelta(seconds = int(order_time - System_start_time))            # Trans to date time format, i.e. hour: minute: second
+    stime = time.strftime("%H:%M:%S", order_time)                         # a string storing the time of ordering
+    templist[3] = stime            # Trans to date time format, i.e. hour: minute: second
     #templist[3] = round((order_time - System_start_time) / 60, 2)              
     # search the required expected time as initial value of remainTime
     for dish in TodayMenu:
@@ -160,11 +155,12 @@ def queue(orderedlist,TodayMenu):
             if orderToCal != eachOrder:
                 index_of_ToCal = findIndex(orderToCal[2], TodayMenu)
                 index_of_Each = findIndex(eachOrder[2], TodayMenu)
-                if TodayMenu[index_of_ToCal][2] == TodayMenu[index_of_Each][2]:             # increase the similarity by 3 if they have same cooking method
-                    orderToCal[5] +=3
-                # increase the similarity by 1 for each similar cooking ingredient
+                if TodayMenu[index_of_ToCal][2] == TodayMenu[index_of_Each][2]:             # increase the similarity by 5 if they have same cooking method
+                    orderToCal[5] +=5                                                     
+                # increase the similarity by 1 for each similar cooking ingredient  
                 orderToCal[5] += len(set(TodayMenu[index_of_ToCal][4:] ) & set(TodayMenu[index_of_Each][4:] ))
-                
+                # probably will fail if too many different grps of similar unserved food xd 
+
     orderedlist.sort( key = lambda l:l[5], reverse=True)            # sort the 2D order list by the similarity by descending order
     for order in orderedlist:           
         del order[5]    
@@ -178,15 +174,14 @@ System_start_time = time.time()     # storing the time the system open
 ordered_list = []             # a 2D list storing the unserved dishes
 ordered_history = []          # a 2D list storing the order record
 ID_to_name = {}               # a dictionary storing the name of dishes corresponding to each dish ID
-Max_WaitTime_EachDish = 900   # initialize the maximum waiting time of each dish as 15 mins (900s), ignore it if the preparation time is longer
-Number_of_chef = 1            # initialize the number of dish being prepared at the same time  
 orderNumber = 0                  # The number N : N-th order
+csv_filename = ""           # filename of the menu data
 
 # main program start
 
-TodayMenu = readdata()                  # TodayMenu is the 2D list storing all dishes
+csv_filename = customize()              # ask the user about the csv data filename
+TodayMenu = readdata(csv_filename)      # TodayMenu is the 2D list storing all dishes
 ID_to_name = defineDict(TodayMenu)      # define the dish ID to name dictionary
-#customize()                             # ask the user about some values of pre-load variables
 response = mainmenu()                   # get the user response
 while (response != '7'):
 
