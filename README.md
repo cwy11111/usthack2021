@@ -1,3 +1,3 @@
-# usthack2021
+# hackUST2021
 ## Team: whyou888
 ## Project : Food Ordering Helper 
