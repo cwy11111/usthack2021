@@ -4,7 +4,7 @@
  
 
 **Introduction** <br>
-<br>This project is prototype mainly designed for small restaurants like Cha Chaan Teng in Hong Kong. They can install this *portable,light text-line interface program* on their computer and use it to help with ordering.
+<br>This project is a prototype mainly designed for small restaurants like Cha Chaan Teng in Hong Kong. They can install this *portable,light text-line interface program* on their computer and use it to help with ordering.
   
 **How to Use**
 1. Make a `.csv` file as to store all the information about all dishes in your restaurant. Store the `.csv` file into the folder *`data`*. Please follow the format as shown in the `example.csv` under *`data`* folder. You can simply change the content below **Row 1** of `example.csv`. You can also keep the `example.csv` and use it in the application as demonstration. (Remember to store the `.csv` file in UTF-8 encoding.) <br><br>
