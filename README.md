@@ -3,7 +3,7 @@
 ## Team: whyou888
  
 
-**Introduction**
+**Introduction** <br>
 <br>This project is mainly for small restaurants like Cha Chaan Teng in Hong Kong. They can install this *portable,light text-line interface program* on their computer and use it to help with ordering.
   
 **How to Use**
